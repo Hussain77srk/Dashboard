@@ -1,0 +1,1419 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة إدارة اجنحة المسافر للسفر والسياحة</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getFirestore, collection, getDocs, updateDoc, doc, query, orderBy, deleteDoc, addDoc, where } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+        
+        // Firebase configuration (same as main app)
+        const firebaseConfig = {
+            apiKey: "AIzaSyAw0OGmGdtpK2JYE4rkYnKUMfmicEU_lKU",
+            authDomain: "safar-529c4.firebaseapp.com",
+            databaseURL: "https://safar-529c4-default-rtdb.firebaseio.com",
+            projectId: "safar-529c4",
+            storageBucket: "safar-529c4.firebasestorage.app",
+            messagingSenderId: "296030548234",
+            appId: "1:296030548234:web:34cb4cf8a4eqaabdc67b48af3",       
+            measurementId: "Good"
+        };
+        
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        
+        // Make Firebase available globally
+        window.firebaseDB = db;
+        window.firebaseCollection = collection;
+        window.firebaseGetDocs = getDocs;
+        window.firebaseUpdateDoc = updateDoc;
+        window.firebaseDoc = doc;
+        window.firebaseQuery = query;
+        window.firebaseOrderBy = orderBy;
+        window.firebaseDeleteDoc = deleteDoc;
+        window.firebaseAddDoc = addDoc;
+        window.firebaseWhere = where;
+    </script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#5D5CDE',
+                        secondary: '#F8F9FA'
+                    },
+                    fontFamily: {
+                        arabic: ['Tajawal', 'Arial', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700&display=swap');
+        body { font-family: 'Tajawal', Arial, sans-serif; }
+        
+        .hero-gradient {
+            background: linear-gradient(135deg, #5D5CDE 0%, #4338CA 100%);
+        }
+        
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+        
+        .card-hover:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Dark mode styles */
+        .dark {
+            --tw-bg-opacity: 1;
+            background-color: rgb(24 24 24 / var(--tw-bg-opacity));
+            color: white;
+        }
+        
+        .status-pending { background-color: #FEF3C7; color: #92400E; }
+        .status-confirmed { background-color: #D1FAE5; color: #065F46; }
+        .status-cancelled { background-color: #FEE2E2; color: #991B1B; }
+        
+        .dark .status-pending { background-color: #451A03; color: #FCD34D; }
+        .dark .status-confirmed { background-color: #064E3B; color: #6EE7B7; }
+        .dark .status-cancelled { background-color: #7F1D1D; color: #FCA5A5; }
+
+        .logo-container img {
+            max-width: 60px;
+            max-height: 60px;
+            object-fit: contain;
+        }
+    </style>
+</head>
+<body class="bg-white dark:bg-gray-900 text-gray-900 dark:text-white transition-colors duration-300">
+    
+    <!-- Image Upload Modal -->
+    <div id="image-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-md w-full">
+            <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-xl font-bold">تحميل شعار الوكالة</h3>
+                    <button onclick="closeImageModal()" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="p-6">
+                <div class="mb-4">
+                    <label class="block text-sm font-medium mb-2">اختر صورة من جهازك</label>
+                    <input type="file" id="image-upload" accept="image/*" class="w-full px-4 py-3 text-base border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-primary">
+                </div>
+                <div class="text-center">
+                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">أو أدخل رابط الصورة</p>
+                    <input type="url" id="image-url" placeholder="https://example.com/logo.jpg" class="w-full px-4 py-3 text-base border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-primary mb-4">
+                </div>
+                <div class="flex gap-4">
+                    <button onclick="applyImage()" class="flex-1 bg-primary text-white py-3 rounded-lg font-semibold hover:bg-purple-700 transition-colors">
+                        تطبيق
+                    </button>
+                    <button onclick="closeImageModal()" class="flex-1 bg-gray-600 text-white py-3 rounded-lg font-semibold hover:bg-gray-700 transition-colors">
+                        إلغاء
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Login Section -->
+    <div id="login-section" class="min-h-screen hero-gradient flex items-center justify-center">
+        <div class="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-2xl w-full max-w-md">
+            <div class="text-center mb-8">
+                <div class="logo-container relative group cursor-pointer mx-auto mb-4" onclick="openImageModal()">
+                    <img id="login-logo" src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMzAiIGN5PSIzMCIgcj0iMzAiIGZpbGw9IiM1RDVDREUiLz4KPHN2ZyB4PSIyMCIgeT0iMjAiIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCIgZmlsbD0iI0ZGRiI+CjxwYXRoIGQ9Ik0xMCA1TDE4IDEwTDEwIDE1VjEzSDJWN0gxMFY1WiIvPgo8L3N2Zz4KPC9zdmc+" alt="شعار الوكالة" class="mx-auto">
+                    <div class="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity rounded-full flex items-center justify-center">
+                        <i class="fas fa-camera text-white text-sm"></i>
+                    </div>
+                </div>
+                <h1 class="text-2xl font-bold text-gray-900 dark:text-white">لوحة إدارة الوكالة</h1>
+                <p class="text-gray-600 dark:text-gray-300 mt-2">تسجيل دخول الإدارة</p>
+            </div>
+            
+            <form id="login-form">
+                <div class="mb-6">
+                    <label class="block text-sm font-medium mb-2 text-gray-900 dark:text-white">اسم المستخدم</label>
+                    <input type="text" id="username" class="w-full px-4 py-3 text-base border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary" required>
+                </div>
+                
+                <div class="mb-6">
+                    <label class="block text-sm font-medium mb-2 text-gray-900 dark:text-white">كلمة المرور</label>
+                    <input type="password" id="password" class="w-full px-4 py-3 text-base border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary" required>
+                </div>
+                
+                <button type="submit" class="w-full bg-primary text-white py-3 rounded-lg font-semibold hover:bg-purple-700 transition-colors mb-4">
+                    تسجيل الدخول
+                </button>
+                
+                <div class="text-center">
+                    <button type="button" onclick="showRegistration()" class="text-primary hover:underline">
+                        ليس لديك حساب؟ إنشاء حساب جديد
+                    </button>
+                </div>
+                
+                <div id="login-error" class="hidden mt-4 p-3 bg-red-100 dark:bg-red-900 border border-red-400 text-red-700 dark:text-red-300 rounded-lg">
+                    <i class="fas fa-exclamation-circle mr-2"></i>
+                    <span>اسم المستخدم أو كلمة المرور غير صحيحة</span>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Registration Section -->
+    <div id="registration-section" class="hidden min-h-screen hero-gradient flex items-center justify-center">
+        <div class="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-2xl w-full max-w-md">
+            <div class="text-center mb-8">
+                <img id="register-logo" src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMzAiIGN5PSIzMCIgcj0iMzAiIGZpbGw9IiM1RDVDREUiLz4KPHN2ZyB4PSIyMCIgeT0iMjAiIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCIgZmlsbD0iI0ZGRiI+CjxwYXRoIGQ9Ik0xMCA1TDE4IDEwTDEwIDE1VjEzSDJWN0gxMFY1WiIvPgo8L3N2Zz4KPC9zdmc+" alt="شعار الوكالة" class="mx-auto mb-4">
+                <h1 class="text-2xl font-bold text-gray-900 dark:text-white">إنشاء حساب جديد</h1>
+                <p class="text-gray-600 dark:text-gray-300 mt-2">انضم لفريق إدارة الوكالة</p>
+            </div>
+            
+            <form id="registration-form">
+                <div class="mb-4">
+                    <label class="block text-sm font-medium mb-2 text-gray-900 dark:text-white">الاسم الكامل</label>
+                    <input type="text" id="fullname" class="w-full px-4 py-3 text-base border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary" required>
+                </div>
+                
+                <div class="mb-4">
+                    <label class="block text-sm font-medium mb-2 text-gray-900 dark:text-white">اسم المستخدم</label>
+                    <input type="text" id="new-username" class="w-full px-4 py-3 text-base border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary" required>
+                </div>
+                
+                <div class="mb-4">
+                    <label class="block text-sm font-medium mb-2 text-gray-900 dark:text-white">كلمة المرور</label>
+                    <input type="password" id="new-password" class="w-full px-4 py-3 text-base border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary" required>
+                </div>
+                
+                <div class="mb-6">
+                    <label class="block text-sm font-medium mb-2 text-gray-900 dark:text-white">تأكيد كلمة المرور</label>
+                    <input type="password" id="confirm-password" class="w-full px-4 py-3 text-base border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary" required>
+                </div>
+                
+                <button type="submit" class="w-full bg-primary text-white py-3 rounded-lg font-semibold hover:bg-purple-700 transition-colors mb-4">
+                    إنشاء الحساب
+                </button>
+                
+                <div class="text-center">
+                    <button type="button" onclick="showLogin()" class="text-primary hover:underline">
+                        لديك حساب بالفعل؟ تسجيل دخول
+                    </button>
+                </div>
+                
+                <div id="registration-message" class="hidden mt-4 p-3 rounded-lg">
+                    <i class="mr-2"></i>
+                    <span></span>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Admin Dashboard -->
+    <div id="admin-section" class="hidden">
+        <!-- Navigation -->
+        <nav class="bg-white dark:bg-gray-800 shadow-lg">
+            <div class="container mx-auto px-4">
+                <div class="flex justify-between items-center h-16">
+                    <div class="flex items-center space-x-reverse space-x-4">
+                        <img id="nav-logo" src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMjAiIGZpbGw9IiM1RDVDREUiLz4KPHN2ZyB4PSIxMCIgeT0iMTAiIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCIgZmlsbD0iI0ZGRiI+CjxwYXRoIGQ9Ik0xMCA1TDE4IDEwTDEwIDE1VjEzSDJWN0gxMFY1WiIvPgo8L3N2Zz4KPC9zdmc+" alt="شعار الوكالة" class="w-8 h-8">
+                        <h1 class="text-xl font-bold text-primary">لوحة إدارة اجنحة المسافر للسفر والسياحة</h1>
+                    </div>
+                    <div class="flex items-center space-x-reverse space-x-4">
+                        <span class="text-sm text-gray-600 dark:text-gray-300">مرحباً، <span id="current-user">مدير النظام</span></span>
+                        <button onclick="logout()" class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors">
+                            <i class="fas fa-sign-out-alt mr-2"></i>
+                            تسجيل خروج
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Dashboard Content -->
+        <div class="container mx-auto px-4 py-8">
+            <!-- Statistics Cards -->
+            <div class="grid md:grid-cols-3 gap-6 mb-8">
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg">
+                    <div class="flex items-center">
+                        <div class="bg-blue-100 dark:bg-blue-900 p-3 rounded-full">
+                            <i class="fas fa-calendar-check text-blue-600 dark:text-blue-400 text-xl"></i>
+                        </div>
+                        <div class="mr-4">
+                            <h3 class="text-2xl font-bold" id="total-bookings">0</h3>
+                            <p class="text-gray-600 dark:text-gray-300">إجمالي الحجوزات</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg">
+                    <div class="flex items-center">
+                        <div class="bg-yellow-100 dark:bg-yellow-900 p-3 rounded-full">
+                            <i class="fas fa-clock text-yellow-600 dark:text-yellow-400 text-xl"></i>
+                        </div>
+                        <div class="mr-4">
+                            <h3 class="text-2xl font-bold" id="pending-bookings">0</h3>
+                            <p class="text-gray-600 dark:text-gray-300">حجوزات في الانتظار</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg">
+                    <div class="flex items-center">
+                        <div class="bg-green-100 dark:bg-green-900 p-3 rounded-full">
+                            <i class="fas fa-check-circle text-green-600 dark:text-green-400 text-xl"></i>
+                        </div>
+                        <div class="mr-4">
+                            <h3 class="text-2xl font-bold" id="confirmed-bookings">0</h3>
+                            <p class="text-gray-600 dark:text-gray-300">حجوزات مؤكدة</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Search and Actions -->
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg mb-6">
+                <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+                    <div class="flex flex-col lg:flex-row gap-4 justify-between items-start lg:items-center">
+                        <h2 class="text-2xl font-bold">إدارة الحجوزات</h2>
+                        <div class="flex flex-col sm:flex-row gap-4 w-full lg:w-auto">
+                            <div class="relative flex-1 lg:w-80">
+                                <input type="text" id="search-input" placeholder="البحث في الحجوزات..." class="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-primary">
+                                <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                            </div>
+                            <button onclick="loadBookings()" class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors whitespace-nowrap">
+                                <i class="fas fa-sync-alt mr-2"></i>
+                                تحديث
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-6">
+                    <div id="loading-spinner" class="text-center py-8">
+                        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+                        <p class="mt-4 text-gray-600 dark:text-gray-300">جارٍ تحميل الحجوزات...</p>
+                    </div>
+
+                    <div id="bookings-container" class="hidden">
+                        <div class="overflow-x-auto">
+                            <table class="w-full">
+                                <thead>
+                                    <tr class="border-b border-gray-200 dark:border-gray-700">
+                                        <th class="text-right py-3 px-4 font-semibold">اسم العميل</th>
+                                        <th class="text-right py-3 px-4 font-semibold">الوجهة</th>
+                                        <th class="text-right py-3 px-4 font-semibold">تاريخ المغادرة</th>
+                                        <th class="text-right py-3 px-4 font-semibold">عدد المسافرين</th>
+                                        <th class="text-right py-3 px-4 font-semibold">الحالة</th>
+                                        <th class="text-right py-3 px-4 font-semibold">الإجراءات</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="bookings-table-body">
+                                    <!-- Bookings will be loaded here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div id="no-bookings" class="hidden text-center py-8">
+                        <i class="fas fa-inbox text-4xl text-gray-400 mb-4"></i>
+                        <p class="text-gray-600 dark:text-gray-300">لا توجد حجوزات بعد</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contact Section - تم حذف العنوان وساعات العمل -->
+        <section class="py-20 bg-gray-50 dark:bg-gray-800">
+            <div class="container mx-auto px-4">
+                <div class="text-center mb-16">
+                    <h2 class="text-4xl font-bold mb-4">تواصل معنا</h2>
+                    <p class="text-gray-600 dark:text-gray-300 text-lg">نحن هنا لخدمتك في أي وقت</p>
+                </div>
+
+                <div class="grid md:grid-cols-2 gap-8 max-w-2xl mx-auto">
+                    <!-- Contact Cards -->
+                    <div class="text-center p-6">
+                        <div class="bg-primary text-white w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <i class="fas fa-phone text-2xl"></i>
+                        </div>
+                        <h3 class="text-lg font-semibold mb-2">الهاتف</h3>
+                        <!-- أرقام الهواتف مع روابط اتصال مباشر -->
+                        <a href="tel:+249912626128" class="block text-gray-600 dark:text-gray-300 hover:text-primary transition-colors mb-1">+249912626128</a>
+                        <a href="tel:+249126126242" class="block text-gray-600 dark:text-gray-300 hover:text-primary transition-colors mb-1">+249126126242</a>
+                        <a href="tel:+966560228334" class="block text-gray-600 dark:text-gray-300 hover:text-primary transition-colors">+966560228334</a>
+                    </div>
+
+                    <div class="text-center p-6">
+                        <div class="bg-green-600 text-white w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <i class="fab fa-whatsapp text-2xl"></i>
+                        </div>
+                        <h3 class="text-lg font-semibold mb-2">📱 الواتساب</h3>
+                        <!-- رقم الواتساب كما طلب المستخدم -->
+                        <a href="https://wa.me/249912626128" target="_blank" class="block text-gray-600 dark:text-gray-300 hover:text-primary transition-colors">+249912626128</a>
+                    </div>
+                </div>
+
+                <!-- Social Media -->
+                <div class="mt-16 text-center">
+                    <h3 class="text-2xl font-bold mb-8">تابعنا على وسائل التواصل</h3>
+                    <div class="flex justify-center space-x-reverse space-x-6">
+                        <a href="#" class="bg-blue-600 text-white w-12 h-12 rounded-full flex items-center justify-center hover:bg-blue-700 transition-colors">
+                            <i class="fab fa-facebook-f"></i>
+                        </a>
+                        <a href="https://wa.me/249912626128" target="_blank" class="bg-green-600 text-white w-12 h-12 rounded-full flex items-center justify-center hover:bg-green-700 transition-colors">
+                            <i class="fab fa-whatsapp"></i>
+                        </a>
+                        <a href="#" class="bg-black text-white w-12 h-12 rounded-full flex items-center justify-center hover:bg-gray-800 transition-colors">
+                            <i class="fab fa-tiktok"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="bg-gray-800 dark:bg-gray-900 text-white py-12">
+            <div class="container mx-auto px-4">
+                <div class="grid md:grid-cols-2 gap-8">
+                    <div>
+                        <div class="flex items-center space-x-reverse space-x-4 mb-4">
+                            <img id="footer-logo" src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMjAiIGZpbGw9IiM1RDVDREUiLz4KPHN2ZyB4PSIxMCIgeT0iMTAiIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCIgZmlsbD0iI0ZGRiI+CjxwYXRoIGQ9Ik0xMCA1TDE4IDEwTDEwIDE1VjEzSDJWN0gxMFY1WiIvPgo8L3N2Zz4KPC9zdmc+" alt="شعار الوكالة" class="w-8 h-8">
+                            <h3 class="text-xl font-bold">اجنحة المسافر للسفر والسياحة</h3>
+                        </div>
+                        <p class="text-gray-400">نحن وكالة سفر رائدة نقدم أفضل الخدمات السياحية لعملائنا الكرام</p>
+                    </div>
+                    
+                    <div>
+                        <h4 class="text-lg font-semibold mb-4">روابط سريعة</h4>
+                        <ul class="space-y-2">
+                            <li><a href="#" class="text-gray-400 hover:text-white transition-colors">لوحة الإدارة</a></li>
+                            <li><a href="#" class="text-gray-400 hover:text-white transition-colors">الحجوزات</a></li>
+                            <li><a href="#" onclick="showUserManagement()" class="text-gray-400 hover:text-white transition-colors cursor-pointer">إدارة المستخدمين</a></li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="border-t border-gray-700 mt-8 pt-8 text-center">
+                    <p class="text-gray-400">&copy; 2024 اجنحة المسافر للسفر والسياحة. جميع الحقوق محفوظة.</p>
+                    <p class="text-gray-500 text-sm mt-2">تم التصميم من قبل المهندس حسين نقد</p>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- User Management Modal -->
+    <div id="user-management-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-4xl w-full max-h-96 overflow-y-auto">
+            <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-2xl font-bold">إدارة المستخدمين</h3>
+                    <button onclick="closeUserManagement()" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="p-6">
+                <div class="mb-4">
+                    <button onclick="showAddUserForm()" class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors">
+                        <i class="fas fa-plus mr-2"></i>
+                        إضافة مستخدم جديد
+                    </button>
+                </div>
+                
+                <!-- Add User Form -->
+                <div id="add-user-form" class="hidden mb-6 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                    <h4 class="text-lg font-semibold mb-4">إضافة مستخدم جديد</h4>
+                    <form id="admin-add-user-form">
+                        <div class="grid md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium mb-2">الاسم الكامل</label>
+                                <input type="text" id="admin-fullname" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-primary" required>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium mb-2">اسم المستخدم</label>
+                                <input type="text" id="admin-username" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-primary" required>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium mb-2">كلمة المرور</label>
+                                <input type="password" id="admin-password" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-primary" required>
+                            </div>
+                            <div class="flex items-end">
+                                <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors mr-2">
+                                    إضافة
+                                </button>
+                                <button type="button" onclick="hideAddUserForm()" class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors">
+                                    إلغاء
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Users List -->
+                <div id="users-list">
+                    <div id="users-loading" class="text-center py-4">
+                        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+                        <p class="mt-2 text-gray-600 dark:text-gray-300">جارٍ تحميل المستخدمين...</p>
+                    </div>
+                    <div id="users-table" class="hidden">
+                        <table class="w-full">
+                            <thead>
+                                <tr class="border-b border-gray-200 dark:border-gray-700">
+                                    <th class="text-right py-3 px-4 font-semibold">الاسم الكامل</th>
+                                    <th class="text-right py-3 px-4 font-semibold">اسم المستخدم</th>
+                                    <th class="text-right py-3 px-4 font-semibold">تاريخ الإنشاء</th>
+                                    <th class="text-right py-3 px-4 font-semibold">الإجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody id="users-table-body">
+                                <!-- Users will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit User Modal -->
+    <div id="edit-user-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-md w-full">
+            <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-xl font-bold">تعديل المستخدم</h3>
+                    <button onclick="closeEditUser()" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="p-6">
+                <form id="edit-user-form">
+                    <input type="hidden" id="edit-user-id">
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium mb-2">الاسم الكامل</label>
+                            <input type="text" id="edit-user-fullname" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-primary" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2">اسم المستخدم</label>
+                            <input type="text" id="edit-user-username" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-primary" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2">كلمة المرور الجديدة (اتركها فارغة إذا لم ترد التغيير)</label>
+                            <input type="password" id="edit-user-password" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-primary">
+                        </div>
+                    </div>
+                    <div class="mt-6 flex gap-4">
+                        <button type="submit" class="flex-1 bg-primary text-white py-2 rounded-lg font-semibold hover:bg-purple-700 transition-colors">
+                            حفظ التعديلات
+                        </button>
+                        <button type="button" onclick="closeEditUser()" class="flex-1 bg-gray-600 text-white py-2 rounded-lg font-semibold hover:bg-gray-700 transition-colors">
+                            إلغاء
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Booking Details Modal -->
+    <div id="booking-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-2xl w-full max-h-96 overflow-y-auto">
+            <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-2xl font-bold">تفاصيل الحجز</h3>
+                    <button onclick="closeModal()" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+            </div>
+            <div id="booking-details" class="p-6">
+                <!-- Booking details will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Booking Modal -->
+    <div id="edit-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-4xl w-full max-h-96 overflow-y-auto">
+            <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-2xl font-bold">تعديل الحجز</h3>
+                    <button onclick="closeEditModal()" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="p-6">
+                <form id="edit-booking-form">
+                    <input type="hidden" id="edit-booking-id">
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium mb-2">الاسم الكامل</label>
+                            <input type="text" id="edit-fullName" class="w-full px-4 py-3 text-base border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-primary" required>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium mb-2">رقم الهاتف</label>
+                            <input type="tel" id="edit-phone" class="w-full px-4 py-3 text-base border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-primary" required>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium mb-2">البريد الإلكتروني</label>
+                            <input type="email" id="edit-email" class="w-full px-4 py-3 text-base border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-primary" required>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium mb-2">الوجهة المطلوبة</label>
+                            <input type="text" id="edit-destination" class="w-full px-4 py-3 text-base border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-primary" required>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium mb-2">تاريخ المغادرة</label>
+                            <input type="date" id="edit-departureDate" class="w-full px-4 py-3 text-base border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-primary" required>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium mb-2">تاريخ العودة</label>
+                            <input type="date" id="edit-returnDate" class="w-full px-4 py-3 text-base border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-primary" required>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium mb-2">عدد المسافرين</label>
+                            <select id="edit-travelers" class="w-full px-4 py-3 text-base border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-primary" required>
+                                <option value="1">مسافر واحد</option>
+                                <option value="2">مسافران</option>
+                                <option value="3">3 مسافرين</option>
+                                <option value="4">4 مسافرين</option>
+                                <option value="5+">أكثر من 4 مسافرين</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium mb-2">نوع الرحلة</label>
+                            <select id="edit-tripType" class="w-full px-4 py-3 text-base border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-primary" required>
+                                <option value="economy">اقتصادية</option>
+                                <option value="business">رجال أعمال</option>
+                                <option value="first">درجة أولى</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-6">
+                        <label class="block text-sm font-medium mb-2">ملاحظات إضافية</label>
+                        <textarea id="edit-notes" rows="3" class="w-full px-4 py-3 text-base border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-primary"></textarea>
+                    </div>
+                    
+                    <div class="mt-6 flex gap-4">
+                        <button type="submit" class="flex-1 bg-primary text-white py-3 rounded-lg font-semibold hover:bg-purple-700 transition-colors">
+                            حفظ التعديلات
+                        </button>
+                        <button type="button" onclick="closeEditModal()" class="flex-1 bg-gray-600 text-white py-3 rounded-lg font-semibold hover:bg-gray-700 transition-colors">
+                            إلغاء
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Dark mode detection
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.documentElement.classList.add('dark');
+        }
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+            if (event.matches) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        });
+
+        // Global variables
+        let currentUser = '';
+        let allBookings = [];
+        let filteredBookings = [];
+        let allUsers = [];
+
+        // Image modal functions
+        function openImageModal() {
+            document.getElementById('image-modal').classList.remove('hidden');
+            document.getElementById('image-upload').value = '';
+            document.getElementById('image-url').value = '';
+        }
+
+        function closeImageModal() {
+            document.getElementById('image-modal').classList.add('hidden');
+        }
+
+        function applyImage() {
+            const fileInput = document.getElementById('image-upload');
+            const urlInput = document.getElementById('image-url');
+            
+            if (fileInput.files.length > 0) {
+                const file = fileInput.files[0];
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    updateLogo(e.target.result);
+                };
+                reader.readAsDataURL(file);
+            } else if (urlInput.value.trim()) {
+                updateLogo(urlInput.value.trim());
+            }
+        }
+
+        function updateLogo(imageSrc) {
+            document.getElementById('login-logo').src = imageSrc;
+            document.getElementById('register-logo').src = imageSrc;
+            document.getElementById('nav-logo').src = imageSrc;
+            document.getElementById('footer-logo').src = imageSrc;
+            closeImageModal();
+        }
+
+        // Authentication functions
+        function showRegistration() {
+            document.getElementById('login-section').classList.add('hidden');
+            document.getElementById('registration-section').classList.remove('hidden');
+        }
+
+        function showLogin() {
+            document.getElementById('registration-section').classList.add('hidden');
+            document.getElementById('login-section').classList.remove('hidden');
+        }
+
+        // Login functionality
+        document.getElementById('login-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            // Check default admin credentials
+            if (username === 'admin' && password === 'admin123') {
+                currentUser = 'مدير النظام';
+                document.getElementById('current-user').textContent = currentUser;
+                document.getElementById('login-section').classList.add('hidden');
+                document.getElementById('admin-section').classList.remove('hidden');
+                loadBookings();
+                return;
+            }
+            
+            // Check Firebase for custom accounts
+            try {
+                if (window.firebaseDB) {
+                    const usersRef = window.firebaseCollection(window.firebaseDB, 'users');
+                    const q = window.firebaseQuery(usersRef, window.firebaseWhere('username', '==', username));
+                    const querySnapshot = await window.firebaseGetDocs(q);
+                    
+                    let userFound = false;
+                    querySnapshot.forEach((doc) => {
+                        const userData = doc.data();
+                        if (userData.password === password) {
+                            currentUser = userData.fullname;
+                            document.getElementById('current-user').textContent = currentUser;
+                            document.getElementById('login-section').classList.add('hidden');
+                            document.getElementById('admin-section').classList.remove('hidden');
+                            loadBookings();
+                            userFound = true;
+                        }
+                    });
+                    
+                    if (!userFound) {
+                        document.getElementById('login-error').classList.remove('hidden');
+                        setTimeout(() => {
+                            document.getElementById('login-error').classList.add('hidden');
+                        }, 3000);
+                    }
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                document.getElementById('login-error').classList.remove('hidden');
+                setTimeout(() => {
+                    document.getElementById('login-error').classList.add('hidden');
+                }, 3000);
+            }
+        });
+
+        // Registration functionality
+        document.getElementById('registration-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const fullname = document.getElementById('fullname').value;
+            const username = document.getElementById('new-username').value;
+            const password = document.getElementById('new-password').value;
+            const confirmPassword = document.getElementById('confirm-password').value;
+            
+            if (password !== confirmPassword) {
+                showMessage('كلمات المرور غير متطابقة', 'error');
+                return;
+            }
+            
+            try {
+                if (window.firebaseDB) {
+                    // Check if username already exists
+                    const usersRef = window.firebaseCollection(window.firebaseDB, 'users');
+                    const q = window.firebaseQuery(usersRef, window.firebaseWhere('username', '==', username));
+                    const querySnapshot = await window.firebaseGetDocs(q);
+                    
+                    if (!querySnapshot.empty) {
+                        showMessage('اسم المستخدم موجود بالفعل', 'error');
+                        return;
+                    }
+                    
+                    // Create new user
+                    await window.firebaseAddDoc(usersRef, {
+                        fullname: fullname,
+                        username: username,
+                        password: password,
+                        createdAt: new Date()
+                    });
+                    
+                    showMessage('تم إنشاء الحساب بنجاح! يمكنك الآن تسجيل الدخول', 'success');
+                    
+                    setTimeout(() => {
+                        showLogin();
+                    }, 2000);
+                }
+            } catch (error) {
+                console.error('Registration error:', error);
+                showMessage('حدث خطأ في إنشاء الحساب', 'error');
+            }
+        });
+
+        function showMessage(message, type) {
+            const messageDiv = document.getElementById('registration-message');
+            const icon = messageDiv.querySelector('i');
+            const span = messageDiv.querySelector('span');
+            
+            span.textContent = message;
+            messageDiv.classList.remove('hidden', 'bg-green-100', 'bg-red-100', 'text-green-700', 'text-red-700', 'border-green-400', 'border-red-400');
+            icon.classList.remove('fas', 'fa-check-circle', 'fa-exclamation-circle');
+            
+            if (type === 'success') {
+                messageDiv.classList.add('bg-green-100', 'text-green-700', 'border-green-400');
+                icon.classList.add('fas', 'fa-check-circle');
+            } else {
+                messageDiv.classList.add('bg-red-100', 'text-red-700', 'border-red-400');
+                icon.classList.add('fas', 'fa-exclamation-circle');
+            }
+            
+            setTimeout(() => {
+                messageDiv.classList.add('hidden');
+            }, 5000);
+        }
+
+        // Logout functionality
+        function logout() {
+            document.getElementById('admin-section').classList.add('hidden');
+            document.getElementById('login-section').classList.remove('hidden');
+            document.getElementById('username').value = '';
+            document.getElementById('password').value = '';
+            currentUser = '';
+        }
+
+        // Search functionality
+        document.getElementById('search-input').addEventListener('input', function(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            
+            if (searchTerm === '') {
+                filteredBookings = [...allBookings];
+            } else {
+                filteredBookings = allBookings.filter(booking => 
+                    booking.fullName.toLowerCase().includes(searchTerm) ||
+                    booking.destination.toLowerCase().includes(searchTerm) ||
+                    booking.phone.includes(searchTerm) ||
+                    booking.email.toLowerCase().includes(searchTerm)
+                );
+            }
+            
+            displayBookings(filteredBookings);
+        });
+
+        // Load bookings from Firebase
+        async function loadBookings() {
+            try {
+                document.getElementById('loading-spinner').classList.remove('hidden');
+                document.getElementById('bookings-container').classList.add('hidden');
+                document.getElementById('no-bookings').classList.add('hidden');
+
+                if (!window.firebaseDB) {
+                    throw new Error('Firebase not initialized');
+                }
+
+                const bookingsRef = window.firebaseCollection(window.firebaseDB, 'bookings');
+                const q = window.firebaseQuery(bookingsRef, window.firebaseOrderBy('timestamp', 'desc'));
+                const querySnapshot = await window.firebaseGetDocs(q);
+                
+                allBookings = [];
+                querySnapshot.forEach((doc) => {
+                    allBookings.push({ id: doc.id, ...doc.data() });
+                });
+
+                filteredBookings = [...allBookings];
+                document.getElementById('loading-spinner').classList.add('hidden');
+                
+                if (allBookings.length === 0) {
+                    document.getElementById('no-bookings').classList.remove('hidden');
+                    return;
+                }
+
+                // Update statistics
+                updateStatistics();
+                
+                // Display bookings
+                displayBookings(filteredBookings);
+                document.getElementById('bookings-container').classList.remove('hidden');
+                
+            } catch (error) {
+                console.error('Error loading bookings:', error);
+                document.getElementById('loading-spinner').classList.add('hidden');
+                
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'text-center py-8';
+                errorDiv.innerHTML = `
+                    <i class="fas fa-exclamation-triangle text-4xl text-red-400 mb-4"></i>
+                    <p class="text-red-600 dark:text-red-400">حدث خطأ في تحميل الحجوزات</p>
+                `;
+                
+                const container = document.getElementById('bookings-container');
+                container.innerHTML = '';
+                container.appendChild(errorDiv);
+                container.classList.remove('hidden');
+            }
+        }
+
+        function updateStatistics() {
+            const totalBookings = allBookings.length;
+            const pendingBookings = allBookings.filter(b => b.status === 'pending').length;
+            const confirmedBookings = allBookings.filter(b => b.status === 'confirmed').length;
+
+            document.getElementById('total-bookings').textContent = totalBookings;
+            document.getElementById('pending-bookings').textContent = pendingBookings;
+            document.getElementById('confirmed-bookings').textContent = confirmedBookings;
+        }
+
+        function displayBookings(bookings) {
+            const tableBody = document.getElementById('bookings-table-body');
+            tableBody.innerHTML = '';
+
+            if (bookings.length === 0) {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td colspan="6" class="text-center py-8 text-gray-500">
+                        <i class="fas fa-search text-2xl mb-2"></i>
+                        <p>لا توجد نتائج للبحث المطلوب</p>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+                return;
+            }
+
+            bookings.forEach(booking => {
+                const row = document.createElement('tr');
+                row.className = 'border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700';
+                
+                const statusClass = `status-${booking.status || 'pending'}`;
+                const statusText = {
+                    pending: 'في الانتظار',
+                    confirmed: 'مؤكد',
+                    cancelled: 'ملغي'
+                };
+
+                row.innerHTML = `
+                    <td class="py-3 px-4">${booking.fullName}</td>
+                    <td class="py-3 px-4">${booking.destination}</td>
+                    <td class="py-3 px-4">${booking.departureDate}</td>
+                    <td class="py-3 px-4">${booking.travelers}</td>
+                    <td class="py-3 px-4">
+                        <span class="px-2 py-1 rounded-full text-xs font-semibold ${statusClass}">
+                            ${statusText[booking.status] || 'في الانتظار'}
+                        </span>
+                    </td>
+                    <td class="py-3 px-4">
+                        <div class="flex space-x-reverse space-x-1 flex-wrap gap-1">
+                            <button onclick="viewBooking('${booking.id}')" class="bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700 transition-colors text-xs">
+                                <i class="fas fa-eye mr-1"></i>
+                                عرض
+                            </button>
+                            <button onclick="editBooking('${booking.id}')" class="bg-yellow-600 text-white px-2 py-1 rounded hover:bg-yellow-700 transition-colors text-xs">
+                                <i class="fas fa-edit mr-1"></i>
+                                تعديل
+                            </button>
+                            ${booking.status === 'pending' ? `
+                                <button onclick="updateBookingStatus('${booking.id}', 'confirmed')" class="bg-green-600 text-white px-2 py-1 rounded hover:bg-green-700 transition-colors text-xs">
+                                    <i class="fas fa-check mr-1"></i>
+                                    تأكيد
+                                </button>
+                            ` : ''}
+                            ${booking.status !== 'cancelled' ? `
+                                <button onclick="updateBookingStatus('${booking.id}', 'cancelled')" class="bg-red-600 text-white px-2 py-1 rounded hover:bg-red-700 transition-colors text-xs">
+                                    <i class="fas fa-times mr-1"></i>
+                                    إلغاء
+                                </button>
+                            ` : ''}
+                            <button onclick="deleteBooking('${booking.id}')" class="bg-gray-800 text-white px-2 py-1 rounded hover:bg-gray-900 transition-colors text-xs">
+                                <i class="fas fa-trash mr-1"></i>
+                                حذف
+                            </button>
+                        </div>
+                    </td>
+                `;
+                
+                tableBody.appendChild(row);
+            });
+        }
+
+        // Update booking status
+        async function updateBookingStatus(bookingId, newStatus) {
+            try {
+                if (!window.firebaseDB) {
+                    throw new Error('Firebase not initialized');
+                }
+
+                const bookingRef = window.firebaseDoc(window.firebaseDB, 'bookings', bookingId);
+                await window.firebaseUpdateDoc(bookingRef, {
+                    status: newStatus
+                });
+
+                // Update local data
+                const bookingIndex = allBookings.findIndex(b => b.id === bookingId);
+                if (bookingIndex !== -1) {
+                    allBookings[bookingIndex].status = newStatus;
+                    filteredBookings = allBookings.filter(booking => 
+                        booking.fullName.toLowerCase().includes(document.getElementById('search-input').value.toLowerCase()) ||
+                        booking.destination.toLowerCase().includes(document.getElementById('search-input').value.toLowerCase()) ||
+                        booking.phone.includes(document.getElementById('search-input').value) ||
+                        booking.email.toLowerCase().includes(document.getElementById('search-input').value.toLowerCase()) ||
+                        document.getElementById('search-input').value === ''
+                    );
+                    updateStatistics();
+                    displayBookings(filteredBookings);
+                }
+                
+                // Show success message
+                showStatusMessage('تم تحديث حالة الحجز بنجاح', 'success');
+                
+            } catch (error) {
+                console.error('Error updating booking:', error);
+                showStatusMessage('حدث خطأ في تحديث الحجز', 'error');
+            }
+        }
+
+        // Delete booking
+        async function deleteBooking(bookingId) {
+            if (!confirm('هل أنت متأكد من حذف هذا الحجز؟ لا يمكن التراجع عن هذا الإجراء.')) {
+                return;
+            }
+            
+            try {
+                if (!window.firebaseDB) {
+                    throw new Error('Firebase not initialized');
+                }
+
+                const bookingRef = window.firebaseDoc(window.firebaseDB, 'bookings', bookingId);
+                await window.firebaseDeleteDoc(bookingRef);
+
+                // Update local data
+                allBookings = allBookings.filter(b => b.id !== bookingId);
+                filteredBookings = filteredBookings.filter(b => b.id !== bookingId);
+                
+                updateStatistics();
+                displayBookings(filteredBookings);
+                
+                showStatusMessage('تم حذف الحجز بنجاح', 'success');
+                
+            } catch (error) {
+                console.error('Error deleting booking:', error);
+                showStatusMessage('حدث خطأ في حذف الحجز', 'error');
+            }
+        }
+
+        // Edit booking
+        function editBooking(bookingId) {
+            const booking = allBookings.find(b => b.id === bookingId);
+            if (!booking) return;
+
+            // Fill the edit form
+            document.getElementById('edit-booking-id').value = bookingId;
+            document.getElementById('edit-fullName').value = booking.fullName;
+            document.getElementById('edit-phone').value = booking.phone;
+            document.getElementById('edit-email').value = booking.email;
+            document.getElementById('edit-destination').value = booking.destination;
+            document.getElementById('edit-departureDate').value = booking.departureDate;
+            document.getElementById('edit-returnDate').value = booking.returnDate;
+            document.getElementById('edit-travelers').value = booking.travelers;
+            document.getElementById('edit-tripType').value = booking.tripType;
+            document.getElementById('edit-notes').value = booking.notes || '';
+
+            document.getElementById('edit-modal').classList.remove('hidden');
+        }
+
+        // Handle edit form submission
+        document.getElementById('edit-booking-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const bookingId = document.getElementById('edit-booking-id').value;
+            const updatedData = {
+                fullName: document.getElementById('edit-fullName').value,
+                phone: document.getElementById('edit-phone').value,
+                email: document.getElementById('edit-email').value,
+                destination: document.getElementById('edit-destination').value,
+                departureDate: document.getElementById('edit-departureDate').value,
+                returnDate: document.getElementById('edit-returnDate').value,
+                travelers: document.getElementById('edit-travelers').value,
+                tripType: document.getElementById('edit-tripType').value,
+                notes: document.getElementById('edit-notes').value
+            };
+            
+            try {
+                if (!window.firebaseDB) {
+                    throw new Error('Firebase not initialized');
+                }
+
+                const bookingRef = window.firebaseDoc(window.firebaseDB, 'bookings', bookingId);
+                await window.firebaseUpdateDoc(bookingRef, updatedData);
+
+                // Update local data
+                const bookingIndex = allBookings.findIndex(b => b.id === bookingId);
+                if (bookingIndex !== -1) {
+                    allBookings[bookingIndex] = { ...allBookings[bookingIndex], ...updatedData };
+                    
+                    // Update filtered bookings
+                    const filteredIndex = filteredBookings.findIndex(b => b.id === bookingId);
+                    if (filteredIndex !== -1) {
+                        filteredBookings[filteredIndex] = { ...filteredBookings[filteredIndex], ...updatedData };
+                    }
+                    
+                    displayBookings(filteredBookings);
+                }
+                
+                closeEditModal();
+                showStatusMessage('تم تحديث الحجز بنجاح', 'success');
+                
+            } catch (error) {
+                console.error('Error updating booking:', error);
+                showStatusMessage('حدث خطأ في تحديث الحجز', 'error');
+            }
+        });
+
+        function closeEditModal() {
+            document.getElementById('edit-modal').classList.add('hidden');
+        }
+
+        // View booking details
+        function viewBooking(bookingId) {
+            const booking = allBookings.find(b => b.id === bookingId);
+            if (!booking) return;
+
+            const statusText = {
+                pending: 'في الانتظار',
+                confirmed: 'مؤكد',
+                cancelled: 'ملغي'
+            };
+
+            const tripTypeText = {
+                economy: 'اقتصادية',
+                business: 'رجال أعمال',
+                first: 'درجة أولى'
+            };
+
+            const detailsContainer = document.getElementById('booking-details');
+            detailsContainer.innerHTML = `
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div>
+                        <h4 class="font-semibold text-gray-700 dark:text-gray-300 mb-2">معلومات العميل</h4>
+                        <div class="space-y-2">
+                            <p><span class="font-medium">الاسم:</span> ${booking.fullName}</p>
+                            <p><span class="font-medium">الهاتف:</span> ${booking.phone}</p>
+                            <p><span class="font-medium">البريد الإلكتروني:</span> ${booking.email}</p>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <h4 class="font-semibold text-gray-700 dark:text-gray-300 mb-2">تفاصيل الرحلة</h4>
+                        <div class="space-y-2">
+                            <p><span class="font-medium">الوجهة:</span> ${booking.destination}</p>
+                            <p><span class="font-medium">تاريخ المغادرة:</span> ${booking.departureDate}</p>
+                            <p><span class="font-medium">تاريخ العودة:</span> ${booking.returnDate}</p>
+                            <p><span class="font-medium">عدد المسافرين:</span> ${booking.travelers}</p>
+                            <p><span class="font-medium">نوع الرحلة:</span> ${tripTypeText[booking.tripType] || booking.tripType}</p>
+                        </div>
+                    </div>
+                </div>
+                
+                ${booking.notes ? `
+                    <div class="mt-6">
+                        <h4 class="font-semibold text-gray-700 dark:text-gray-300 mb-2">ملاحظات إضافية</h4>
+                        <p class="bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">${booking.notes}</p>
+                    </div>
+                ` : ''}
+                
+                <div class="mt-6 flex justify-between items-center">
+                    <div class="flex items-center space-x-reverse space-x-4">
+                        <span class="font-medium">الحالة:</span>
+                        <span class="px-3 py-1 rounded-full text-sm font-semibold status-${booking.status || 'pending'}">
+                            ${statusText[booking.status] || 'في الانتظار'}
+                        </span>
+                    </div>
+                    
+                    <div class="flex space-x-reverse space-x-2">
+                        <button onclick="editBooking('${booking.id}'); closeModal();" class="bg-yellow-600 text-white px-4 py-2 rounded hover:bg-yellow-700 transition-colors">
+                            <i class="fas fa-edit mr-1"></i>
+                            تعديل
+                        </button>
+                        ${booking.status === 'pending' ? `
+                            <button onclick="updateBookingStatus('${booking.id}', 'confirmed'); closeModal();" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition-colors">
+                                <i class="fas fa-check mr-1"></i>
+                                تأكيد الحجز
+                            </button>
+                        ` : ''}
+                        ${booking.status !== 'cancelled' ? `
+                            <button onclick="updateBookingStatus('${booking.id}', 'cancelled'); closeModal();" class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition-colors">
+                                <i class="fas fa-times mr-1"></i>
+                                إلغاء الحجز
+                            </button>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('booking-modal').classList.remove('hidden');
+        }
+
+        // Close modal
+        function closeModal() {
+            document.getElementById('booking-modal').classList.add('hidden');
+        }
+
+        // Close modal on outside click
+        document.getElementById('booking-modal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeModal();
+            }
+        });
+
+        document.getElementById('edit-modal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeEditModal();
+            }
+        });
+
+        function showStatusMessage(message, type) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `fixed top-4 left-1/2 transform -translate-x-1/2 px-4 py-3 rounded-lg z-50 ${
+                type === 'success' 
+                    ? 'bg-green-100 dark:bg-green-800 border border-green-400 text-green-700 dark:text-green-200' 
+                    : 'bg-red-100 dark:bg-red-800 border border-red-400 text-red-700 dark:text-red-200'
+            }`;
+            messageDiv.innerHTML = `
+                <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'} mr-2"></i>
+                ${message}
+            `;
+            
+            document.body.appendChild(messageDiv);
+            
+            setTimeout(() => {
+                messageDiv.remove();
+            }, 3000);
+        }
+
+        // User Management Functions
+        function showUserManagement() {
+            document.getElementById('user-management-modal').classList.remove('hidden');
+            loadUsers();
+        }
+
+        function closeUserManagement() {
+            document.getElementById('user-management-modal').classList.add('hidden');
+            hideAddUserForm();
+        }
+
+        function showAddUserForm() {
+            document.getElementById('add-user-form').classList.remove('hidden');
+        }
+
+        function hideAddUserForm() {
+            document.getElementById('add-user-form').classList.add('hidden');
+            document.getElementById('admin-add-user-form').reset();
+        }
+
+        async function loadUsers() {
+            try {
+                document.getElementById('users-loading').classList.remove('hidden');
+                document.getElementById('users-table').classList.add('hidden');
+
+                if (!window.firebaseDB) {
+                    throw new Error('Firebase not initialized');
+                }
+
+                const usersRef = window.firebaseCollection(window.firebaseDB, 'users');
+                const querySnapshot = await window.firebaseGetDocs(usersRef);
+                
+                allUsers = [];
+                querySnapshot.forEach((doc) => {
+                    allUsers.push({ id: doc.id, ...doc.data() });
+                });
+
+                document.getElementById('users-loading').classList.add('hidden');
+                displayUsers();
+                document.getElementById('users-table').classList.remove('hidden');
+                
+            } catch (error) {
+                console.error('Error loading users:', error);
+                document.getElementById('users-loading').classList.add('hidden');
+                showStatusMessage('حدث خطأ في تحميل المستخدمين', 'error');
+            }
+        }
+
+        function displayUsers() {
+            const tableBody = document.getElementById('users-table-body');
+            tableBody.innerHTML = '';
+
+            allUsers.forEach(user => {
+                const row = document.createElement('tr');
+                row.className = 'border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700';
+                
+                const createdDate = user.createdAt ? new Date(user.createdAt.seconds * 1000).toLocaleDateString('ar-SA') : 'غير محدد';
+                
+                row.innerHTML = `
+                    <td class="py-3 px-4">${user.fullname}</td>
+                    <td class="py-3 px-4">${user.username}</td>
+                    <td class="py-3 px-4">${createdDate}</td>
+                    <td class="py-3 px-4">
+                        <div class="flex space-x-reverse space-x-1 gap-1">
+                            <button onclick="editUser('${user.id}')" class="bg-yellow-600 text-white px-3 py-1 rounded hover:bg-yellow-700 transition-colors text-sm">
+                                <i class="fas fa-edit mr-1"></i>
+                                تعديل
+                            </button>
+                            <button onclick="deleteUser('${user.id}', '${user.username}')" class="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 transition-colors text-sm">
+                                <i class="fas fa-trash mr-1"></i>
+                                حذف
+                            </button>
+                        </div>
+                    </td>
+                `;
+                
+                tableBody.appendChild(row);
+            });
+        }
+
+        // Add User Form Submission
+        document.getElementById('admin-add-user-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const fullname = document.getElementById('admin-fullname').value;
+            const username = document.getElementById('admin-username').value;
+            const password = document.getElementById('admin-password').value;
+            
+            try {
+                if (window.firebaseDB) {
+                    // Check if username already exists
+                    const usersRef = window.firebaseCollection(window.firebaseDB, 'users');
+                    const q = window.firebaseQuery(usersRef, window.firebaseWhere('username', '==', username));
+                    const querySnapshot = await window.firebaseGetDocs(q);
+                    
+                    if (!querySnapshot.empty) {
+                        showStatusMessage('اسم المستخدم موجود بالفعل', 'error');
+                        return;
+                    }
+                    
+                    // Create new user
+                    await window.firebaseAddDoc(usersRef, {
+                        fullname: fullname,
+                        username: username,
+                        password: password,
+                        createdAt: new Date()
+                    });
+                    
+                    showStatusMessage('تم إضافة المستخدم بنجاح', 'success');
+                    hideAddUserForm();
+                    loadUsers();
+                }
+            } catch (error) {
+                console.error('Error adding user:', error);
+                showStatusMessage('حدث خطأ في إضافة المستخدم', 'error');
+            }
+        });
+
+        function editUser(userId) {
+            const user = allUsers.find(u => u.id === userId);
+            if (!user) return;
+
+            document.getElementById('edit-user-id').value = userId;
+            document.getElementById('edit-user-fullname').value = user.fullname;
+            document.getElementById('edit-user-username').value = user.username;
+            document.getElementById('edit-user-password').value = '';
+
+            document.getElementById('edit-user-modal').classList.remove('hidden');
+        }
+
+        function closeEditUser() {
+            document.getElementById('edit-user-modal').classList.add('hidden');
+        }
+
+        // Edit User Form Submission
+        document.getElementById('edit-user-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const userId = document.getElementById('edit-user-id').value;
+            const fullname = document.getElementById('edit-user-fullname').value;
+            const username = document.getElementById('edit-user-username').value;
+            const password = document.getElementById('edit-user-password').value;
+            
+            try {
+                if (window.firebaseDB) {
+                    const userRef = window.firebaseDoc(window.firebaseDB, 'users', userId);
+                    const updateData = {
+                        fullname: fullname,
+                        username: username
+                    };
+                    
+                    if (password.trim()) {
+                        updateData.password = password;
+                    }
+                    
+                    await window.firebaseUpdateDoc(userRef, updateData);
+                    
+                    showStatusMessage('تم تحديث المستخدم بنجاح', 'success');
+                    closeEditUser();
+                    loadUsers();
+                }
+            } catch (error) {
+                console.error('Error updating user:', error);
+                showStatusMessage('حدث خطأ في تحديث المستخدم', 'error');
+            }
+        });
+
+        async function deleteUser(userId, username) {
+            if (!confirm(`هل أنت متأكد من حذف المستخدم "${username}"؟ لا يمكن التراجع عن هذا الإجراء.`)) {
+                return;
+            }
+            
+            try {
+                if (window.firebaseDB) {
+                    const userRef = window.firebaseDoc(window.firebaseDB, 'users', userId);
+                    await window.firebaseDeleteDoc(userRef);
+                    
+                    showStatusMessage('تم حذف المستخدم بنجاح', 'success');
+                    loadUsers();
+                }
+            } catch (error) {
+                console.error('Error deleting user:', error);
+                showStatusMessage('حدث خطأ في حذف المستخدم', 'error');
+            }
+        }
+    </script>
+</body>
+</html>
