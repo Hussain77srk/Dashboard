@@ -92,6 +92,11 @@
             max-height: 60px;
             object-fit: contain;
         }
+
+        .tab-button.active {
+            background-color: #5D5CDE;
+            color: white;
+        }
     </style>
 </head>
 <body class="bg-white dark:bg-gray-900 text-gray-900 dark:text-white transition-colors duration-300">
@@ -243,7 +248,7 @@
         <!-- Dashboard Content -->
         <div class="container mx-auto px-4 py-8">
             <!-- Statistics Cards -->
-            <div class="grid md:grid-cols-3 gap-6 mb-8">
+            <div class="grid md:grid-cols-4 gap-6 mb-8">
                 <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg">
                     <div class="flex items-center">
                         <div class="bg-blue-100 dark:bg-blue-900 p-3 rounded-full">
@@ -279,16 +284,42 @@
                         </div>
                     </div>
                 </div>
+
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg">
+                    <div class="flex items-center">
+                        <div class="bg-purple-100 dark:bg-purple-900 p-3 rounded-full">
+                            <i class="fas fa-users text-purple-600 dark:text-purple-400 text-xl"></i>
+                        </div>
+                        <div class="mr-4">
+                            <h3 class="text-2xl font-bold" id="total-visits">0</h3>
+                            <p class="text-gray-600 dark:text-gray-300">طلبات تأمين الزيارات</p>
+                        </div>
+                    </div>
+                </div>
             </div>
 
-            <!-- Search and Actions -->
+            <!-- Tabs Navigation -->
             <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg mb-6">
                 <div class="p-6 border-b border-gray-200 dark:border-gray-700">
-                    <div class="flex flex-col lg:flex-row gap-4 justify-between items-start lg:items-center">
+                    <div class="flex flex-wrap gap-4">
+                        <button onclick="showTab('bookings')" id="bookings-tab" class="tab-button active px-6 py-3 rounded-lg font-semibold transition-colors bg-gray-200 dark:bg-gray-700 hover:bg-primary hover:text-white">
+                            <i class="fas fa-calendar-check mr-2"></i>
+                            إدارة الحجوزات
+                        </button>
+                        <button onclick="showTab('visits')" id="visits-tab" class="tab-button px-6 py-3 rounded-lg font-semibold transition-colors bg-gray-200 dark:bg-gray-700 hover:bg-primary hover:text-white">
+                            <i class="fas fa-users mr-2"></i>
+                            طلبات تأمين الزيارات
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Bookings Tab Content -->
+                <div id="bookings-content" class="p-6">
+                    <div class="flex flex-col lg:flex-row gap-4 justify-between items-start lg:items-center mb-6">
                         <h2 class="text-2xl font-bold">إدارة الحجوزات</h2>
                         <div class="flex flex-col sm:flex-row gap-4 w-full lg:w-auto">
                             <div class="relative flex-1 lg:w-80">
-                                <input type="text" id="search-input" placeholder="البحث في الحجوزات..." class="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-primary">
+                                <input type="text" id="search-bookings" placeholder="البحث في الحجوزات..." class="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-primary">
                                 <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
                             </div>
                             <button onclick="loadBookings()" class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors whitespace-nowrap">
@@ -297,10 +328,8 @@
                             </button>
                         </div>
                     </div>
-                </div>
 
-                <div class="p-6">
-                    <div id="loading-spinner" class="text-center py-8">
+                    <div id="bookings-loading" class="text-center py-8">
                         <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
                         <p class="mt-4 text-gray-600 dark:text-gray-300">جارٍ تحميل الحجوزات...</p>
                     </div>
@@ -312,6 +341,7 @@
                                     <tr class="border-b border-gray-200 dark:border-gray-700">
                                         <th class="text-right py-3 px-4 font-semibold">اسم العميل</th>
                                         <th class="text-right py-3 px-4 font-semibold">الوجهة</th>
+                                        <th class="text-right py-3 px-4 font-semibold">من - إلى</th>
                                         <th class="text-right py-3 px-4 font-semibold">تاريخ المغادرة</th>
                                         <th class="text-right py-3 px-4 font-semibold">عدد المسافرين</th>
                                         <th class="text-right py-3 px-4 font-semibold">الحالة</th>
@@ -330,10 +360,57 @@
                         <p class="text-gray-600 dark:text-gray-300">لا توجد حجوزات بعد</p>
                     </div>
                 </div>
+
+                <!-- Visits Tab Content -->
+                <div id="visits-content" class="p-6 hidden">
+                    <div class="flex flex-col lg:flex-row gap-4 justify-between items-start lg:items-center mb-6">
+                        <h2 class="text-2xl font-bold">طلبات تأمين الزيارات العائلية</h2>
+                        <div class="flex flex-col sm:flex-row gap-4 w-full lg:w-auto">
+                            <div class="relative flex-1 lg:w-80">
+                                <input type="text" id="search-visits" placeholder="البحث في طلبات الزيارات..." class="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-primary">
+                                <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                            </div>
+                            <button onclick="loadVisits()" class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors whitespace-nowrap">
+                                <i class="fas fa-sync-alt mr-2"></i>
+                                تحديث
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="visits-loading" class="text-center py-8">
+                        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+                        <p class="mt-4 text-gray-600 dark:text-gray-300">جارٍ تحميل طلبات الزيارات...</p>
+                    </div>
+
+                    <div id="visits-container" class="hidden">
+                        <div class="overflow-x-auto">
+                            <table class="w-full">
+                                <thead>
+                                    <tr class="border-b border-gray-200 dark:border-gray-700">
+                                        <th class="text-right py-3 px-4 font-semibold">اسم العميل</th>
+                                        <th class="text-right py-3 px-4 font-semibold">رقم التأشيرة</th>
+                                        <th class="text-right py-3 px-4 font-semibold">رقم الجواز</th>
+                                        <th class="text-right py-3 px-4 font-semibold">تاريخ الانتهاء</th>
+                                        <th class="text-right py-3 px-4 font-semibold">الحالة</th>
+                                        <th class="text-right py-3 px-4 font-semibold">الإجراءات</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="visits-table-body">
+                                    <!-- Visits will be loaded here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div id="no-visits" class="hidden text-center py-8">
+                        <i class="fas fa-inbox text-4xl text-gray-400 mb-4"></i>
+                        <p class="text-gray-600 dark:text-gray-300">لا توجد طلبات زيارات بعد</p>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <!-- Contact Section - تم حذف العنوان وساعات العمل -->
+        <!-- Contact Section -->
         <section class="py-20 bg-gray-50 dark:bg-gray-800">
             <div class="container mx-auto px-4">
                 <div class="text-center mb-16">
@@ -348,19 +425,17 @@
                             <i class="fas fa-phone text-2xl"></i>
                         </div>
                         <h3 class="text-lg font-semibold mb-2">الهاتف</h3>
-                        <!-- أرقام الهواتف مع روابط اتصال مباشر -->
                         <a href="tel:+249912626128" class="block text-gray-600 dark:text-gray-300 hover:text-primary transition-colors mb-1">+249912626128</a>
                         <a href="tel:+249126126242" class="block text-gray-600 dark:text-gray-300 hover:text-primary transition-colors mb-1">+249126126242</a>
                         <a href="tel:+966560228334" class="block text-gray-600 dark:text-gray-300 hover:text-primary transition-colors">+966560228334</a>
                     </div>
 
                     <div class="text-center p-6">
-                        <div class="bg-green-600 text-white w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <i class="fab fa-whatsapp text-2xl"></i>
+                        <div class="bg-primary text-white w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <i class="fas fa-envelope text-2xl"></i>
                         </div>
-                        <h3 class="text-lg font-semibold mb-2">📱 الواتساب</h3>
-                        <!-- رقم الواتساب كما طلب المستخدم -->
-                        <a href="https://wa.me/249912626128" target="_blank" class="block text-gray-600 dark:text-gray-300 hover:text-primary transition-colors">+249912626128</a>
+                        <h3 class="text-lg font-semibold mb-2">البريد الإلكتروني</h3>
+                        <a href="mailto:travelerwings.sd@gmail.com" class="block text-gray-600 dark:text-gray-300 hover:text-primary transition-colors">travelerwings.sd@gmail.com</a>
                     </div>
                 </div>
 
@@ -368,7 +443,7 @@
                 <div class="mt-16 text-center">
                     <h3 class="text-2xl font-bold mb-8">تابعنا على وسائل التواصل</h3>
                     <div class="flex justify-center space-x-reverse space-x-6">
-                        <a href="#" class="bg-blue-600 text-white w-12 h-12 rounded-full flex items-center justify-center hover:bg-blue-700 transition-colors">
+                        <a href="https://www.facebook.com/share/1CRiVyh6uA/?mibextid=wwXIfr" target="_blank" class="bg-blue-600 text-white w-12 h-12 rounded-full flex items-center justify-center hover:bg-blue-700 transition-colors">
                             <i class="fab fa-facebook-f"></i>
                         </a>
                         <a href="https://wa.me/249912626128" target="_blank" class="bg-green-600 text-white w-12 h-12 rounded-full flex items-center justify-center hover:bg-green-700 transition-colors">
@@ -398,8 +473,8 @@
                         <h4 class="text-lg font-semibold mb-4">روابط سريعة</h4>
                         <ul class="space-y-2">
                             <li><a href="#" class="text-gray-400 hover:text-white transition-colors">لوحة الإدارة</a></li>
-                            <li><a href="#" class="text-gray-400 hover:text-white transition-colors">الحجوزات</a></li>
-                            <li><a href="#" onclick="showUserManagement()" class="text-gray-400 hover:text-white transition-colors cursor-pointer">إدارة المستخدمين</a></li>
+                            <li><a href="#" onclick="showTab('bookings')" class="text-gray-400 hover:text-white transition-colors cursor-pointer">الحجوزات</a></li>
+                            <li><a href="#" onclick="showTab('visits')" class="text-gray-400 hover:text-white transition-colors cursor-pointer">طلبات الزيارات</a></li>
                         </ul>
                     </div>
                 </div>
@@ -412,128 +487,13 @@
         </footer>
     </div>
 
-    <!-- User Management Modal -->
-    <div id="user-management-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+    <!-- Booking Details Modal -->
+    <div id="booking-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-4xl w-full max-h-96 overflow-y-auto">
             <div class="p-6 border-b border-gray-200 dark:border-gray-700">
                 <div class="flex justify-between items-center">
-                    <h3 class="text-2xl font-bold">إدارة المستخدمين</h3>
-                    <button onclick="closeUserManagement()" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
-                        <i class="fas fa-times text-xl"></i>
-                    </button>
-                </div>
-            </div>
-            <div class="p-6">
-                <div class="mb-4">
-                    <button onclick="showAddUserForm()" class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors">
-                        <i class="fas fa-plus mr-2"></i>
-                        إضافة مستخدم جديد
-                    </button>
-                </div>
-                
-                <!-- Add User Form -->
-                <div id="add-user-form" class="hidden mb-6 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                    <h4 class="text-lg font-semibold mb-4">إضافة مستخدم جديد</h4>
-                    <form id="admin-add-user-form">
-                        <div class="grid md:grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-sm font-medium mb-2">الاسم الكامل</label>
-                                <input type="text" id="admin-fullname" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-primary" required>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium mb-2">اسم المستخدم</label>
-                                <input type="text" id="admin-username" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-primary" required>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium mb-2">كلمة المرور</label>
-                                <input type="password" id="admin-password" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-primary" required>
-                            </div>
-                            <div class="flex items-end">
-                                <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors mr-2">
-                                    إضافة
-                                </button>
-                                <button type="button" onclick="hideAddUserForm()" class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors">
-                                    إلغاء
-                                </button>
-                            </div>
-                        </div>
-                    </form>
-                </div>
-
-                <!-- Users List -->
-                <div id="users-list">
-                    <div id="users-loading" class="text-center py-4">
-                        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-                        <p class="mt-2 text-gray-600 dark:text-gray-300">جارٍ تحميل المستخدمين...</p>
-                    </div>
-                    <div id="users-table" class="hidden">
-                        <table class="w-full">
-                            <thead>
-                                <tr class="border-b border-gray-200 dark:border-gray-700">
-                                    <th class="text-right py-3 px-4 font-semibold">الاسم الكامل</th>
-                                    <th class="text-right py-3 px-4 font-semibold">اسم المستخدم</th>
-                                    <th class="text-right py-3 px-4 font-semibold">تاريخ الإنشاء</th>
-                                    <th class="text-right py-3 px-4 font-semibold">الإجراءات</th>
-                                </tr>
-                            </thead>
-                            <tbody id="users-table-body">
-                                <!-- Users will be loaded here -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Edit User Modal -->
-    <div id="edit-user-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-md w-full">
-            <div class="p-6 border-b border-gray-200 dark:border-gray-700">
-                <div class="flex justify-between items-center">
-                    <h3 class="text-xl font-bold">تعديل المستخدم</h3>
-                    <button onclick="closeEditUser()" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
-                        <i class="fas fa-times text-xl"></i>
-                    </button>
-                </div>
-            </div>
-            <div class="p-6">
-                <form id="edit-user-form">
-                    <input type="hidden" id="edit-user-id">
-                    <div class="space-y-4">
-                        <div>
-                            <label class="block text-sm font-medium mb-2">الاسم الكامل</label>
-                            <input type="text" id="edit-user-fullname" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-primary" required>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium mb-2">اسم المستخدم</label>
-                            <input type="text" id="edit-user-username" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-primary" required>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium mb-2">كلمة المرور الجديدة (اتركها فارغة إذا لم ترد التغيير)</label>
-                            <input type="password" id="edit-user-password" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-primary">
-                        </div>
-                    </div>
-                    <div class="mt-6 flex gap-4">
-                        <button type="submit" class="flex-1 bg-primary text-white py-2 rounded-lg font-semibold hover:bg-purple-700 transition-colors">
-                            حفظ التعديلات
-                        </button>
-                        <button type="button" onclick="closeEditUser()" class="flex-1 bg-gray-600 text-white py-2 rounded-lg font-semibold hover:bg-gray-700 transition-colors">
-                            إلغاء
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <!-- Booking Details Modal -->
-    <div id="booking-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-2xl w-full max-h-96 overflow-y-auto">
-            <div class="p-6 border-b border-gray-200 dark:border-gray-700">
-                <div class="flex justify-between items-center">
                     <h3 class="text-2xl font-bold">تفاصيل الحجز</h3>
-                    <button onclick="closeModal()" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
+                    <button onclick="closeModal('booking')" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
                         <i class="fas fa-times text-xl"></i>
                     </button>
                 </div>
@@ -544,86 +504,19 @@
         </div>
     </div>
 
-    <!-- Edit Booking Modal -->
-    <div id="edit-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+    <!-- Visit Details Modal -->
+    <div id="visit-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-4xl w-full max-h-96 overflow-y-auto">
             <div class="p-6 border-b border-gray-200 dark:border-gray-700">
                 <div class="flex justify-between items-center">
-                    <h3 class="text-2xl font-bold">تعديل الحجز</h3>
-                    <button onclick="closeEditModal()" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
+                    <h3 class="text-2xl font-bold">تفاصيل طلب تأمين الزيارة</h3>
+                    <button onclick="closeModal('visit')" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
                         <i class="fas fa-times text-xl"></i>
                     </button>
                 </div>
             </div>
-            <div class="p-6">
-                <form id="edit-booking-form">
-                    <input type="hidden" id="edit-booking-id">
-                    <div class="grid md:grid-cols-2 gap-6">
-                        <div>
-                            <label class="block text-sm font-medium mb-2">الاسم الكامل</label>
-                            <input type="text" id="edit-fullName" class="w-full px-4 py-3 text-base border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-primary" required>
-                        </div>
-                        
-                        <div>
-                            <label class="block text-sm font-medium mb-2">رقم الهاتف</label>
-                            <input type="tel" id="edit-phone" class="w-full px-4 py-3 text-base border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-primary" required>
-                        </div>
-                        
-                        <div>
-                            <label class="block text-sm font-medium mb-2">البريد الإلكتروني</label>
-                            <input type="email" id="edit-email" class="w-full px-4 py-3 text-base border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-primary" required>
-                        </div>
-                        
-                        <div>
-                            <label class="block text-sm font-medium mb-2">الوجهة المطلوبة</label>
-                            <input type="text" id="edit-destination" class="w-full px-4 py-3 text-base border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-primary" required>
-                        </div>
-                        
-                        <div>
-                            <label class="block text-sm font-medium mb-2">تاريخ المغادرة</label>
-                            <input type="date" id="edit-departureDate" class="w-full px-4 py-3 text-base border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-primary" required>
-                        </div>
-                        
-                        <div>
-                            <label class="block text-sm font-medium mb-2">تاريخ العودة</label>
-                            <input type="date" id="edit-returnDate" class="w-full px-4 py-3 text-base border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-primary" required>
-                        </div>
-                        
-                        <div>
-                            <label class="block text-sm font-medium mb-2">عدد المسافرين</label>
-                            <select id="edit-travelers" class="w-full px-4 py-3 text-base border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-primary" required>
-                                <option value="1">مسافر واحد</option>
-                                <option value="2">مسافران</option>
-                                <option value="3">3 مسافرين</option>
-                                <option value="4">4 مسافرين</option>
-                                <option value="5+">أكثر من 4 مسافرين</option>
-                            </select>
-                        </div>
-                        
-                        <div>
-                            <label class="block text-sm font-medium mb-2">نوع الرحلة</label>
-                            <select id="edit-tripType" class="w-full px-4 py-3 text-base border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-primary" required>
-                                <option value="economy">اقتصادية</option>
-                                <option value="business">رجال أعمال</option>
-                                <option value="first">درجة أولى</option>
-                            </select>
-                        </div>
-                    </div>
-                    
-                    <div class="mt-6">
-                        <label class="block text-sm font-medium mb-2">ملاحظات إضافية</label>
-                        <textarea id="edit-notes" rows="3" class="w-full px-4 py-3 text-base border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-primary"></textarea>
-                    </div>
-                    
-                    <div class="mt-6 flex gap-4">
-                        <button type="submit" class="flex-1 bg-primary text-white py-3 rounded-lg font-semibold hover:bg-purple-700 transition-colors">
-                            حفظ التعديلات
-                        </button>
-                        <button type="button" onclick="closeEditModal()" class="flex-1 bg-gray-600 text-white py-3 rounded-lg font-semibold hover:bg-gray-700 transition-colors">
-                            إلغاء
-                        </button>
-                    </div>
-                </form>
+            <div id="visit-details" class="p-6">
+                <!-- Visit details will be loaded here -->
             </div>
         </div>
     </div>
@@ -645,7 +538,31 @@
         let currentUser = '';
         let allBookings = [];
         let filteredBookings = [];
-        let allUsers = [];
+        let allVisits = [];
+        let filteredVisits = [];
+        let currentTab = 'bookings';
+
+        // Tab management
+        function showTab(tabName) {
+            currentTab = tabName;
+            
+            // Update tab buttons
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.getElementById(tabName + '-tab').classList.add('active');
+            
+            // Show/hide content
+            document.getElementById('bookings-content').classList.toggle('hidden', tabName !== 'bookings');
+            document.getElementById('visits-content').classList.toggle('hidden', tabName !== 'visits');
+            
+            // Load data for the active tab
+            if (tabName === 'bookings') {
+                loadBookings();
+            } else if (tabName === 'visits') {
+                loadVisits();
+            }
+        }
 
         // Image modal functions
         function openImageModal() {
@@ -706,7 +623,7 @@
                 document.getElementById('current-user').textContent = currentUser;
                 document.getElementById('login-section').classList.add('hidden');
                 document.getElementById('admin-section').classList.remove('hidden');
-                loadBookings();
+                showTab('bookings');
                 return;
             }
             
@@ -725,7 +642,7 @@
                             document.getElementById('current-user').textContent = currentUser;
                             document.getElementById('login-section').classList.add('hidden');
                             document.getElementById('admin-section').classList.remove('hidden');
-                            loadBookings();
+                            showTab('bookings');
                             userFound = true;
                         }
                     });
@@ -823,8 +740,8 @@
             currentUser = '';
         }
 
-        // Search functionality
-        document.getElementById('search-input').addEventListener('input', function(e) {
+        // Search functionality for bookings
+        document.getElementById('search-bookings').addEventListener('input', function(e) {
             const searchTerm = e.target.value.toLowerCase();
             
             if (searchTerm === '') {
@@ -834,17 +751,38 @@
                     booking.fullName.toLowerCase().includes(searchTerm) ||
                     booking.destination.toLowerCase().includes(searchTerm) ||
                     booking.phone.includes(searchTerm) ||
-                    booking.email.toLowerCase().includes(searchTerm)
+                    booking.email.toLowerCase().includes(searchTerm) ||
+                    (booking.departureCountry && booking.departureCountry.toLowerCase().includes(searchTerm)) ||
+                    (booking.arrivalCountry && booking.arrivalCountry.toLowerCase().includes(searchTerm))
                 );
             }
             
             displayBookings(filteredBookings);
         });
 
+        // Search functionality for visits
+        document.getElementById('search-visits').addEventListener('input', function(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            
+            if (searchTerm === '') {
+                filteredVisits = [...allVisits];
+            } else {
+                filteredVisits = allVisits.filter(visit => 
+                    visit.fullName.toLowerCase().includes(searchTerm) ||
+                    visit.phone.includes(searchTerm) ||
+                    visit.email.toLowerCase().includes(searchTerm) ||
+                    visit.visaNumber.includes(searchTerm) ||
+                    visit.passportNumber.includes(searchTerm)
+                );
+            }
+            
+            displayVisits(filteredVisits);
+        });
+
         // Load bookings from Firebase
         async function loadBookings() {
             try {
-                document.getElementById('loading-spinner').classList.remove('hidden');
+                document.getElementById('bookings-loading').classList.remove('hidden');
                 document.getElementById('bookings-container').classList.add('hidden');
                 document.getElementById('no-bookings').classList.add('hidden');
 
@@ -862,7 +800,7 @@
                 });
 
                 filteredBookings = [...allBookings];
-                document.getElementById('loading-spinner').classList.add('hidden');
+                document.getElementById('bookings-loading').classList.add('hidden');
                 
                 if (allBookings.length === 0) {
                     document.getElementById('no-bookings').classList.remove('hidden');
@@ -878,7 +816,7 @@
                 
             } catch (error) {
                 console.error('Error loading bookings:', error);
-                document.getElementById('loading-spinner').classList.add('hidden');
+                document.getElementById('bookings-loading').classList.add('hidden');
                 
                 const errorDiv = document.createElement('div');
                 errorDiv.className = 'text-center py-8';
@@ -894,14 +832,69 @@
             }
         }
 
+        // Load visits from Firebase
+        async function loadVisits() {
+            try {
+                document.getElementById('visits-loading').classList.remove('hidden');
+                document.getElementById('visits-container').classList.add('hidden');
+                document.getElementById('no-visits').classList.add('hidden');
+
+                if (!window.firebaseDB) {
+                    throw new Error('Firebase not initialized');
+                }
+
+                const visitsRef = window.firebaseCollection(window.firebaseDB, 'visits');
+                const q = window.firebaseQuery(visitsRef, window.firebaseOrderBy('timestamp', 'desc'));
+                const querySnapshot = await window.firebaseGetDocs(q);
+                
+                allVisits = [];
+                querySnapshot.forEach((doc) => {
+                    allVisits.push({ id: doc.id, ...doc.data() });
+                });
+
+                filteredVisits = [...allVisits];
+                document.getElementById('visits-loading').classList.add('hidden');
+                
+                if (allVisits.length === 0) {
+                    document.getElementById('no-visits').classList.remove('hidden');
+                    return;
+                }
+
+                // Update statistics
+                updateStatistics();
+                
+                // Display visits
+                displayVisits(filteredVisits);
+                document.getElementById('visits-container').classList.remove('hidden');
+                
+            } catch (error) {
+                console.error('Error loading visits:', error);
+                document.getElementById('visits-loading').classList.add('hidden');
+                
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'text-center py-8';
+                errorDiv.innerHTML = `
+                    <i class="fas fa-exclamation-triangle text-4xl text-red-400 mb-4"></i>
+                    <p class="text-red-600 dark:text-red-400">حدث خطأ في تحميل طلبات الزيارات</p>
+                `;
+                
+                const container = document.getElementById('visits-container');
+                container.innerHTML = '';
+                container.appendChild(errorDiv);
+                container.classList.remove('hidden');
+            }
+        }
+
         function updateStatistics() {
             const totalBookings = allBookings.length;
             const pendingBookings = allBookings.filter(b => b.status === 'pending').length;
             const confirmedBookings = allBookings.filter(b => b.status === 'confirmed').length;
+            const totalVisits = allVisits.length;
 
             document.getElementById('total-bookings').textContent = totalBookings;
             document.getElementById('pending-bookings').textContent = pendingBookings;
             document.getElementById('confirmed-bookings').textContent = confirmedBookings;
+            document.getElementById('total-visits').textContent = totalVisits;
         }
 
         function displayBookings(bookings) {
@@ -911,7 +904,7 @@
             if (bookings.length === 0) {
                 const row = document.createElement('tr');
                 row.innerHTML = `
-                    <td colspan="6" class="text-center py-8 text-gray-500">
+                    <td colspan="7" class="text-center py-8 text-gray-500">
                         <i class="fas fa-search text-2xl mb-2"></i>
                         <p>لا توجد نتائج للبحث المطلوب</p>
                     </td>
@@ -931,9 +924,13 @@
                     cancelled: 'ملغي'
                 };
 
+                const countryInfo = booking.departureCountry && booking.arrivalCountry ? 
+                    `${booking.departureCountry} - ${booking.arrivalCountry}` : 'غير محدد';
+
                 row.innerHTML = `
                     <td class="py-3 px-4">${booking.fullName}</td>
                     <td class="py-3 px-4">${booking.destination}</td>
+                    <td class="py-3 px-4 text-sm">${countryInfo}</td>
                     <td class="py-3 px-4">${booking.departureDate}</td>
                     <td class="py-3 px-4">${booking.travelers}</td>
                     <td class="py-3 px-4">
@@ -946,10 +943,6 @@
                             <button onclick="viewBooking('${booking.id}')" class="bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700 transition-colors text-xs">
                                 <i class="fas fa-eye mr-1"></i>
                                 عرض
-                            </button>
-                            <button onclick="editBooking('${booking.id}')" class="bg-yellow-600 text-white px-2 py-1 rounded hover:bg-yellow-700 transition-colors text-xs">
-                                <i class="fas fa-edit mr-1"></i>
-                                تعديل
                             </button>
                             ${booking.status === 'pending' ? `
                                 <button onclick="updateBookingStatus('${booking.id}', 'confirmed')" class="bg-green-600 text-white px-2 py-1 rounded hover:bg-green-700 transition-colors text-xs">
@@ -964,6 +957,73 @@
                                 </button>
                             ` : ''}
                             <button onclick="deleteBooking('${booking.id}')" class="bg-gray-800 text-white px-2 py-1 rounded hover:bg-gray-900 transition-colors text-xs">
+                                <i class="fas fa-trash mr-1"></i>
+                                حذف
+                            </button>
+                        </div>
+                    </td>
+                `;
+                
+                tableBody.appendChild(row);
+            });
+        }
+
+        function displayVisits(visits) {
+            const tableBody = document.getElementById('visits-table-body');
+            tableBody.innerHTML = '';
+
+            if (visits.length === 0) {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td colspan="6" class="text-center py-8 text-gray-500">
+                        <i class="fas fa-search text-2xl mb-2"></i>
+                        <p>لا توجد نتائج للبحث المطلوب</p>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+                return;
+            }
+
+            visits.forEach(visit => {
+                const row = document.createElement('tr');
+                row.className = 'border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700';
+                
+                const statusClass = `status-${visit.status || 'pending'}`;
+                const statusText = {
+                    pending: 'في الانتظار',
+                    confirmed: 'مؤكد',
+                    cancelled: 'ملغي'
+                };
+
+                row.innerHTML = `
+                    <td class="py-3 px-4">${visit.fullName}</td>
+                    <td class="py-3 px-4">${visit.visaNumber}</td>
+                    <td class="py-3 px-4">${visit.passportNumber}</td>
+                    <td class="py-3 px-4">${visit.visaExpiry}</td>
+                    <td class="py-3 px-4">
+                        <span class="px-2 py-1 rounded-full text-xs font-semibold ${statusClass}">
+                            ${statusText[visit.status] || 'في الانتظار'}
+                        </span>
+                    </td>
+                    <td class="py-3 px-4">
+                        <div class="flex space-x-reverse space-x-1 flex-wrap gap-1">
+                            <button onclick="viewVisit('${visit.id}')" class="bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700 transition-colors text-xs">
+                                <i class="fas fa-eye mr-1"></i>
+                                عرض
+                            </button>
+                            ${visit.status === 'pending' ? `
+                                <button onclick="updateVisitStatus('${visit.id}', 'confirmed')" class="bg-green-600 text-white px-2 py-1 rounded hover:bg-green-700 transition-colors text-xs">
+                                    <i class="fas fa-check mr-1"></i>
+                                    تأكيد
+                                </button>
+                            ` : ''}
+                            ${visit.status !== 'cancelled' ? `
+                                <button onclick="updateVisitStatus('${visit.id}', 'cancelled')" class="bg-red-600 text-white px-2 py-1 rounded hover:bg-red-700 transition-colors text-xs">
+                                    <i class="fas fa-times mr-1"></i>
+                                    إلغاء
+                                </button>
+                            ` : ''}
+                            <button onclick="deleteVisit('${visit.id}')" class="bg-gray-800 text-white px-2 py-1 rounded hover:bg-gray-900 transition-colors text-xs">
                                 <i class="fas fa-trash mr-1"></i>
                                 حذف
                             </button>
@@ -992,22 +1052,55 @@
                 if (bookingIndex !== -1) {
                     allBookings[bookingIndex].status = newStatus;
                     filteredBookings = allBookings.filter(booking => 
-                        booking.fullName.toLowerCase().includes(document.getElementById('search-input').value.toLowerCase()) ||
-                        booking.destination.toLowerCase().includes(document.getElementById('search-input').value.toLowerCase()) ||
-                        booking.phone.includes(document.getElementById('search-input').value) ||
-                        booking.email.toLowerCase().includes(document.getElementById('search-input').value.toLowerCase()) ||
-                        document.getElementById('search-input').value === ''
+                        booking.fullName.toLowerCase().includes(document.getElementById('search-bookings').value.toLowerCase()) ||
+                        booking.destination.toLowerCase().includes(document.getElementById('search-bookings').value.toLowerCase()) ||
+                        booking.phone.includes(document.getElementById('search-bookings').value) ||
+                        booking.email.toLowerCase().includes(document.getElementById('search-bookings').value.toLowerCase()) ||
+                        document.getElementById('search-bookings').value === ''
                     );
                     updateStatistics();
                     displayBookings(filteredBookings);
                 }
                 
-                // Show success message
                 showStatusMessage('تم تحديث حالة الحجز بنجاح', 'success');
                 
             } catch (error) {
                 console.error('Error updating booking:', error);
                 showStatusMessage('حدث خطأ في تحديث الحجز', 'error');
+            }
+        }
+
+        // Update visit status
+        async function updateVisitStatus(visitId, newStatus) {
+            try {
+                if (!window.firebaseDB) {
+                    throw new Error('Firebase not initialized');
+                }
+
+                const visitRef = window.firebaseDoc(window.firebaseDB, 'visits', visitId);
+                await window.firebaseUpdateDoc(visitRef, {
+                    status: newStatus
+                });
+
+                // Update local data
+                const visitIndex = allVisits.findIndex(v => v.id === visitId);
+                if (visitIndex !== -1) {
+                    allVisits[visitIndex].status = newStatus;
+                    filteredVisits = allVisits.filter(visit => 
+                        visit.fullName.toLowerCase().includes(document.getElementById('search-visits').value.toLowerCase()) ||
+                        visit.phone.includes(document.getElementById('search-visits').value) ||
+                        visit.email.toLowerCase().includes(document.getElementById('search-visits').value.toLowerCase()) ||
+                        document.getElementById('search-visits').value === ''
+                    );
+                    updateStatistics();
+                    displayVisits(filteredVisits);
+                }
+                
+                showStatusMessage('تم تحديث حالة طلب الزيارة بنجاح', 'success');
+                
+            } catch (error) {
+                console.error('Error updating visit:', error);
+                showStatusMessage('حدث خطأ في تحديث طلب الزيارة', 'error');
             }
         }
 
@@ -1040,76 +1133,33 @@
             }
         }
 
-        // Edit booking
-        function editBooking(bookingId) {
-            const booking = allBookings.find(b => b.id === bookingId);
-            if (!booking) return;
-
-            // Fill the edit form
-            document.getElementById('edit-booking-id').value = bookingId;
-            document.getElementById('edit-fullName').value = booking.fullName;
-            document.getElementById('edit-phone').value = booking.phone;
-            document.getElementById('edit-email').value = booking.email;
-            document.getElementById('edit-destination').value = booking.destination;
-            document.getElementById('edit-departureDate').value = booking.departureDate;
-            document.getElementById('edit-returnDate').value = booking.returnDate;
-            document.getElementById('edit-travelers').value = booking.travelers;
-            document.getElementById('edit-tripType').value = booking.tripType;
-            document.getElementById('edit-notes').value = booking.notes || '';
-
-            document.getElementById('edit-modal').classList.remove('hidden');
-        }
-
-        // Handle edit form submission
-        document.getElementById('edit-booking-form').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            
-            const bookingId = document.getElementById('edit-booking-id').value;
-            const updatedData = {
-                fullName: document.getElementById('edit-fullName').value,
-                phone: document.getElementById('edit-phone').value,
-                email: document.getElementById('edit-email').value,
-                destination: document.getElementById('edit-destination').value,
-                departureDate: document.getElementById('edit-departureDate').value,
-                returnDate: document.getElementById('edit-returnDate').value,
-                travelers: document.getElementById('edit-travelers').value,
-                tripType: document.getElementById('edit-tripType').value,
-                notes: document.getElementById('edit-notes').value
-            };
+        // Delete visit
+        async function deleteVisit(visitId) {
+            if (!confirm('هل أنت متأكد من حذف طلب الزيارة هذا؟ لا يمكن التراجع عن هذا الإجراء.')) {
+                return;
+            }
             
             try {
                 if (!window.firebaseDB) {
                     throw new Error('Firebase not initialized');
                 }
 
-                const bookingRef = window.firebaseDoc(window.firebaseDB, 'bookings', bookingId);
-                await window.firebaseUpdateDoc(bookingRef, updatedData);
+                const visitRef = window.firebaseDoc(window.firebaseDB, 'visits', visitId);
+                await window.firebaseDeleteDoc(visitRef);
 
                 // Update local data
-                const bookingIndex = allBookings.findIndex(b => b.id === bookingId);
-                if (bookingIndex !== -1) {
-                    allBookings[bookingIndex] = { ...allBookings[bookingIndex], ...updatedData };
-                    
-                    // Update filtered bookings
-                    const filteredIndex = filteredBookings.findIndex(b => b.id === bookingId);
-                    if (filteredIndex !== -1) {
-                        filteredBookings[filteredIndex] = { ...filteredBookings[filteredIndex], ...updatedData };
-                    }
-                    
-                    displayBookings(filteredBookings);
-                }
+                allVisits = allVisits.filter(v => v.id !== visitId);
+                filteredVisits = filteredVisits.filter(v => v.id !== visitId);
                 
-                closeEditModal();
-                showStatusMessage('تم تحديث الحجز بنجاح', 'success');
+                updateStatistics();
+                displayVisits(filteredVisits);
+                
+                showStatusMessage('تم حذف طلب الزيارة بنجاح', 'success');
                 
             } catch (error) {
-                console.error('Error updating booking:', error);
-                showStatusMessage('حدث خطأ في تحديث الحجز', 'error');
+                console.error('Error deleting visit:', error);
+                showStatusMessage('حدث خطأ في حذف طلب الزيارة', 'error');
             }
-        });
-
-        function closeEditModal() {
-            document.getElementById('edit-modal').classList.add('hidden');
         }
 
         // View booking details
@@ -1144,6 +1194,8 @@
                     <div>
                         <h4 class="font-semibold text-gray-700 dark:text-gray-300 mb-2">تفاصيل الرحلة</h4>
                         <div class="space-y-2">
+                            <p><span class="font-medium">بلد المغادرة:</span> ${booking.departureCountry || 'غير محدد'}</p>
+                            <p><span class="font-medium">بلد الوصول:</span> ${booking.arrivalCountry || 'غير محدد'}</p>
                             <p><span class="font-medium">الوجهة:</span> ${booking.destination}</p>
                             <p><span class="font-medium">تاريخ المغادرة:</span> ${booking.departureDate}</p>
                             <p><span class="font-medium">تاريخ العودة:</span> ${booking.returnDate}</p>
@@ -1169,18 +1221,14 @@
                     </div>
                     
                     <div class="flex space-x-reverse space-x-2">
-                        <button onclick="editBooking('${booking.id}'); closeModal();" class="bg-yellow-600 text-white px-4 py-2 rounded hover:bg-yellow-700 transition-colors">
-                            <i class="fas fa-edit mr-1"></i>
-                            تعديل
-                        </button>
                         ${booking.status === 'pending' ? `
-                            <button onclick="updateBookingStatus('${booking.id}', 'confirmed'); closeModal();" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition-colors">
+                            <button onclick="updateBookingStatus('${booking.id}', 'confirmed'); closeModal('booking');" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition-colors">
                                 <i class="fas fa-check mr-1"></i>
                                 تأكيد الحجز
                             </button>
                         ` : ''}
                         ${booking.status !== 'cancelled' ? `
-                            <button onclick="updateBookingStatus('${booking.id}', 'cancelled'); closeModal();" class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition-colors">
+                            <button onclick="updateBookingStatus('${booking.id}', 'cancelled'); closeModal('booking');" class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition-colors">
                                 <i class="fas fa-times mr-1"></i>
                                 إلغاء الحجز
                             </button>
@@ -1192,21 +1240,94 @@
             document.getElementById('booking-modal').classList.remove('hidden');
         }
 
+        // View visit details
+        function viewVisit(visitId) {
+            const visit = allVisits.find(v => v.id === visitId);
+            if (!visit) return;
+
+            const statusText = {
+                pending: 'في الانتظار',
+                confirmed: 'مؤكد',
+                cancelled: 'ملغي'
+            };
+
+            const detailsContainer = document.getElementById('visit-details');
+            detailsContainer.innerHTML = `
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div>
+                        <h4 class="font-semibold text-gray-700 dark:text-gray-300 mb-2">معلومات العميل</h4>
+                        <div class="space-y-2">
+                            <p><span class="font-medium">الاسم:</span> ${visit.fullName}</p>
+                            <p><span class="font-medium">الهاتف:</span> ${visit.phone}</p>
+                            <p><span class="font-medium">البريد الإلكتروني:</span> ${visit.email}</p>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <h4 class="font-semibold text-gray-700 dark:text-gray-300 mb-2">بيانات التأشيرة والجواز</h4>
+                        <div class="space-y-2">
+                            <p><span class="font-medium">رقم التأشيرة:</span> ${visit.visaNumber}</p>
+                            <p><span class="font-medium">رقم الحدود:</span> ${visit.borderNumber}</p>
+                            <p><span class="font-medium">رقم الجواز:</span> ${visit.passportNumber}</p>
+                            <p><span class="font-medium">تاريخ انتهاء التأشيرة:</span> ${visit.visaExpiry}</p>
+                        </div>
+                    </div>
+                </div>
+                
+                ${visit.notes ? `
+                    <div class="mt-6">
+                        <h4 class="font-semibold text-gray-700 dark:text-gray-300 mb-2">ملاحظات إضافية</h4>
+                        <p class="bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">${visit.notes}</p>
+                    </div>
+                ` : ''}
+                
+                <div class="mt-6 flex justify-between items-center">
+                    <div class="flex items-center space-x-reverse space-x-4">
+                        <span class="font-medium">الحالة:</span>
+                        <span class="px-3 py-1 rounded-full text-sm font-semibold status-${visit.status || 'pending'}">
+                            ${statusText[visit.status] || 'في الانتظار'}
+                        </span>
+                    </div>
+                    
+                    <div class="flex space-x-reverse space-x-2">
+                        ${visit.status === 'pending' ? `
+                            <button onclick="updateVisitStatus('${visit.id}', 'confirmed'); closeModal('visit');" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition-colors">
+                                <i class="fas fa-check mr-1"></i>
+                                تأكيد الطلب
+                            </button>
+                        ` : ''}
+                        ${visit.status !== 'cancelled' ? `
+                            <button onclick="updateVisitStatus('${visit.id}', 'cancelled'); closeModal('visit');" class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition-colors">
+                                <i class="fas fa-times mr-1"></i>
+                                إلغاء الطلب
+                            </button>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('visit-modal').classList.remove('hidden');
+        }
+
         // Close modal
-        function closeModal() {
-            document.getElementById('booking-modal').classList.add('hidden');
+        function closeModal(type) {
+            if (type === 'booking') {
+                document.getElementById('booking-modal').classList.add('hidden');
+            } else if (type === 'visit') {
+                document.getElementById('visit-modal').classList.add('hidden');
+            }
         }
 
         // Close modal on outside click
         document.getElementById('booking-modal').addEventListener('click', function(e) {
             if (e.target === this) {
-                closeModal();
+                closeModal('booking');
             }
         });
 
-        document.getElementById('edit-modal').addEventListener('click', function(e) {
+        document.getElementById('visit-modal').addEventListener('click', function(e) {
             if (e.target === this) {
-                closeEditModal();
+                closeModal('visit');
             }
         });
 
@@ -1227,192 +1348,6 @@
             setTimeout(() => {
                 messageDiv.remove();
             }, 3000);
-        }
-
-        // User Management Functions
-        function showUserManagement() {
-            document.getElementById('user-management-modal').classList.remove('hidden');
-            loadUsers();
-        }
-
-        function closeUserManagement() {
-            document.getElementById('user-management-modal').classList.add('hidden');
-            hideAddUserForm();
-        }
-
-        function showAddUserForm() {
-            document.getElementById('add-user-form').classList.remove('hidden');
-        }
-
-        function hideAddUserForm() {
-            document.getElementById('add-user-form').classList.add('hidden');
-            document.getElementById('admin-add-user-form').reset();
-        }
-
-        async function loadUsers() {
-            try {
-                document.getElementById('users-loading').classList.remove('hidden');
-                document.getElementById('users-table').classList.add('hidden');
-
-                if (!window.firebaseDB) {
-                    throw new Error('Firebase not initialized');
-                }
-
-                const usersRef = window.firebaseCollection(window.firebaseDB, 'users');
-                const querySnapshot = await window.firebaseGetDocs(usersRef);
-                
-                allUsers = [];
-                querySnapshot.forEach((doc) => {
-                    allUsers.push({ id: doc.id, ...doc.data() });
-                });
-
-                document.getElementById('users-loading').classList.add('hidden');
-                displayUsers();
-                document.getElementById('users-table').classList.remove('hidden');
-                
-            } catch (error) {
-                console.error('Error loading users:', error);
-                document.getElementById('users-loading').classList.add('hidden');
-                showStatusMessage('حدث خطأ في تحميل المستخدمين', 'error');
-            }
-        }
-
-        function displayUsers() {
-            const tableBody = document.getElementById('users-table-body');
-            tableBody.innerHTML = '';
-
-            allUsers.forEach(user => {
-                const row = document.createElement('tr');
-                row.className = 'border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700';
-                
-                const createdDate = user.createdAt ? new Date(user.createdAt.seconds * 1000).toLocaleDateString('ar-SA') : 'غير محدد';
-                
-                row.innerHTML = `
-                    <td class="py-3 px-4">${user.fullname}</td>
-                    <td class="py-3 px-4">${user.username}</td>
-                    <td class="py-3 px-4">${createdDate}</td>
-                    <td class="py-3 px-4">
-                        <div class="flex space-x-reverse space-x-1 gap-1">
-                            <button onclick="editUser('${user.id}')" class="bg-yellow-600 text-white px-3 py-1 rounded hover:bg-yellow-700 transition-colors text-sm">
-                                <i class="fas fa-edit mr-1"></i>
-                                تعديل
-                            </button>
-                            <button onclick="deleteUser('${user.id}', '${user.username}')" class="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 transition-colors text-sm">
-                                <i class="fas fa-trash mr-1"></i>
-                                حذف
-                            </button>
-                        </div>
-                    </td>
-                `;
-                
-                tableBody.appendChild(row);
-            });
-        }
-
-        // Add User Form Submission
-        document.getElementById('admin-add-user-form').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            
-            const fullname = document.getElementById('admin-fullname').value;
-            const username = document.getElementById('admin-username').value;
-            const password = document.getElementById('admin-password').value;
-            
-            try {
-                if (window.firebaseDB) {
-                    // Check if username already exists
-                    const usersRef = window.firebaseCollection(window.firebaseDB, 'users');
-                    const q = window.firebaseQuery(usersRef, window.firebaseWhere('username', '==', username));
-                    const querySnapshot = await window.firebaseGetDocs(q);
-                    
-                    if (!querySnapshot.empty) {
-                        showStatusMessage('اسم المستخدم موجود بالفعل', 'error');
-                        return;
-                    }
-                    
-                    // Create new user
-                    await window.firebaseAddDoc(usersRef, {
-                        fullname: fullname,
-                        username: username,
-                        password: password,
-                        createdAt: new Date()
-                    });
-                    
-                    showStatusMessage('تم إضافة المستخدم بنجاح', 'success');
-                    hideAddUserForm();
-                    loadUsers();
-                }
-            } catch (error) {
-                console.error('Error adding user:', error);
-                showStatusMessage('حدث خطأ في إضافة المستخدم', 'error');
-            }
-        });
-
-        function editUser(userId) {
-            const user = allUsers.find(u => u.id === userId);
-            if (!user) return;
-
-            document.getElementById('edit-user-id').value = userId;
-            document.getElementById('edit-user-fullname').value = user.fullname;
-            document.getElementById('edit-user-username').value = user.username;
-            document.getElementById('edit-user-password').value = '';
-
-            document.getElementById('edit-user-modal').classList.remove('hidden');
-        }
-
-        function closeEditUser() {
-            document.getElementById('edit-user-modal').classList.add('hidden');
-        }
-
-        // Edit User Form Submission
-        document.getElementById('edit-user-form').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            
-            const userId = document.getElementById('edit-user-id').value;
-            const fullname = document.getElementById('edit-user-fullname').value;
-            const username = document.getElementById('edit-user-username').value;
-            const password = document.getElementById('edit-user-password').value;
-            
-            try {
-                if (window.firebaseDB) {
-                    const userRef = window.firebaseDoc(window.firebaseDB, 'users', userId);
-                    const updateData = {
-                        fullname: fullname,
-                        username: username
-                    };
-                    
-                    if (password.trim()) {
-                        updateData.password = password;
-                    }
-                    
-                    await window.firebaseUpdateDoc(userRef, updateData);
-                    
-                    showStatusMessage('تم تحديث المستخدم بنجاح', 'success');
-                    closeEditUser();
-                    loadUsers();
-                }
-            } catch (error) {
-                console.error('Error updating user:', error);
-                showStatusMessage('حدث خطأ في تحديث المستخدم', 'error');
-            }
-        });
-
-        async function deleteUser(userId, username) {
-            if (!confirm(`هل أنت متأكد من حذف المستخدم "${username}"؟ لا يمكن التراجع عن هذا الإجراء.`)) {
-                return;
-            }
-            
-            try {
-                if (window.firebaseDB) {
-                    const userRef = window.firebaseDoc(window.firebaseDB, 'users', userId);
-                    await window.firebaseDeleteDoc(userRef);
-                    
-                    showStatusMessage('تم حذف المستخدم بنجاح', 'success');
-                    loadUsers();
-                }
-            } catch (error) {
-                console.error('Error deleting user:', error);
-                showStatusMessage('حدث خطأ في حذف المستخدم', 'error');
-            }
         }
     </script>
 </body>
